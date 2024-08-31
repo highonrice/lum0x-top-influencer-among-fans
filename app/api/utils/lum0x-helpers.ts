@@ -9,6 +9,21 @@ let reactionScore = 1;
 let replyScore = 2;
 let recastScore = 3;
 
+export interface TopInfluencer {
+  fid: number;
+  username: string;
+  display_name: string;
+  pfp_url: string;
+  follower_count: number;
+  following_count: number;
+  power_badge: boolean;
+  likes: number;
+  recasts: number;
+  replies: number;
+  uniqueChannels: number;
+  uniqueMentions: number;
+}
+
 function getUniqueFidsFromReaction(cast: Cast) {
   const reactionFids = cast.reactions.fids;
   const recastFids = cast.recasts.fids;
@@ -30,7 +45,7 @@ function getUniqueFidsFromReaction(cast: Cast) {
   return uniqueFids;
 }
 
-async function getUsersFromFids(fids: number[]) {
+export async function getUsersFromFids(fids: number[]) {
   const fidsString = fids.join(",");
   
   const res = await Lum0x.farcasterUser.getUserByFids({
@@ -51,7 +66,7 @@ async function getUsersFromFids(fids: number[]) {
 async function processCastsByFid(fid: number) {
   const data = await Lum0x.farcasterCast.getCastsByFid({
     fid: fid,
-    limit: 100,
+    limit: 10,
   });
   
   const { casts } = data.result
@@ -59,8 +74,6 @@ async function processCastsByFid(fid: number) {
   let likes = 0
   let recasts = 0
   let replies = 0
-  let uniqueChannels: string[] = []
-  let uniqueMentions: string[] = []
 
   for (const cast of casts) {
     likes += cast.reactions.likes_count
@@ -78,11 +91,15 @@ async function processCastsByFid(fid: number) {
   }
 }
 
-export async function getTopInfluencerOfMyFans(fid: number) {
+export async function getTopInfluencerOfMyFans(fid: number): Promise<TopInfluencer> {
+  console.log('Processing fid, time: ', new Date());
+
   const data = await Lum0x.farcasterCast.getCastsByFid({
     fid: fid,
-    limit: 100,
+    limit: 1,
   });
+
+  console.log('Got Casts, time: ', new Date() );
 
   const { casts } = data.result
 
@@ -93,12 +110,17 @@ export async function getTopInfluencerOfMyFans(fid: number) {
     const filteredFids = uniqueFids.filter(fid => !fanFids.includes(fid));
     fanFids.push(...filteredFids);
   }
+  console.log('Got fanFids, time: ', new Date() );
+  console.log('length of fanFids: ', fanFids.length);
 
   for (const fanFid of fanFids) {
     await processCastsByFid(fanFid);
   }
 
+  console.log('Processed all fanFids, time: ', new Date() );
+
   const sortedScoreBoard = Object.entries(scoreBoard).sort((a, b) => b[1].totalScore - a[1].totalScore);
+  console.log('Sorting Done, time: ', new Date() );
   const topInfluencerFid = parseInt(sortedScoreBoard[0][0]);
   const topInfluencer = await getUsersFromFids([topInfluencerFid]);
   return {
