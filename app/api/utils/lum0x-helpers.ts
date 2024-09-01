@@ -91,7 +91,7 @@ async function processCastsByFid(fid: number) {
   }
 }
 
-export async function getTopInfluencerOfMyFans(fid: number): Promise<TopInfluencer> {
+async function getTopInfluencerOfMyFans(fid: number): Promise<TopInfluencer> {
   const data = await Lum0x.farcasterCast.getCastsByFid({
     fid: fid,
     limit: 1,
@@ -142,4 +142,8 @@ export async function postLum0xTestFrameValidation(fid: number, path: string) {
       frameUrl: `${process.env.BASE_URL}/api/${path}`
     })
   });
+}
+
+export async function main(fid: number) {
+  return await getTopInfluencerOfMyFans(fid);
 }

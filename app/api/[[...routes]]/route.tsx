@@ -5,7 +5,7 @@ import { devtools } from 'frog/dev'
 import { neynar } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { getTopInfluencerOfMyFans, TopInfluencer, getUsersFromFids, postLum0xTestFrameValidation } from '../utils/lum0x-helpers'
+import { main, TopInfluencer, getUsersFromFids, postLum0xTestFrameValidation } from '../utils/lum0x-helpers'
 import path from 'path';
 import fs from 'fs/promises';
 import { getShareImage } from '@/app/ui/findPage'
@@ -76,7 +76,7 @@ app.frame('/find', async (c) => {
   
   const user = await getUsersFromFids([fid]);
   const displayName = user[0].display_name;
-  const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(fid);
+  const topInfluncer: TopInfluencer = await main(fid);
 
   const frameUrl = `${process.env.BASE_URL}/share/${fid}`
   const message = `@${topInfluncer.username} is the top influencer among my fans!`
@@ -117,7 +117,7 @@ app.frame('/share/:fid', async (c) => {
   }
   const user = await getUsersFromFids([Number(fid)]);
   const displayName = user[0].display_name;
-  const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(Number(fid));
+  const topInfluncer: TopInfluencer = await main(Number(fid));
 
   return c.res({
     image: (
