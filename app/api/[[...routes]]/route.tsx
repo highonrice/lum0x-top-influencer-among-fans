@@ -1,11 +1,11 @@
 /** @jsxImportSource frog/jsx */
 
-import { Button, Frog, TextInput } from 'frog'
+import { Button, Frog } from 'frog'
 import { devtools } from 'frog/dev'
 import { neynar } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { getTopInfluencerOfMyFans, TopInfluencer, getUsersFromFids } from '../utils/lum0x-helpers'
+import { getTopInfluencerOfMyFans, TopInfluencer, getUsersFromFids, postLum0xTestFrameValidation } from '../utils/lum0x-helpers'
 import path from 'path';
 import fs from 'fs/promises';
 import { getShareImage } from '@/app/ui/findPage'
@@ -68,10 +68,12 @@ app.frame('/', (c) => {
 
 app.frame('/find', async (c) => {
   const fid = c.frameData?.fid;
+
   if (!fid) {
     return c.error({message: 'No fid provided'});
   }
-
+  await postLum0xTestFrameValidation(Number(fid), 'find');
+  
   const user = await getUsersFromFids([fid]);
   const displayName = user[0].display_name;
   const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(fid);
@@ -92,7 +94,10 @@ app.frame('/find', async (c) => {
   })
 })
 
-app.frame('/share-default', (c) => {
+app.frame('/share-default', async (c) => {
+  const fid = c.frameData?.fid;
+  await postLum0xTestFrameValidation(Number(fid), 'share-default');
+
   return c.res({
     image: (
       '/Default.jpg'
@@ -106,6 +111,7 @@ app.frame('/share-default', (c) => {
 
 app.frame('/share/:fid', async (c) => {
   const fid = c.req.param('fid');
+  await postLum0xTestFrameValidation(Number(fid), 'share');
   if (!fid) {
     return c.error({message: 'No fid provided'});
   }
