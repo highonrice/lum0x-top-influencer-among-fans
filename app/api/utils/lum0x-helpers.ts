@@ -92,14 +92,10 @@ async function processCastsByFid(fid: number) {
 }
 
 export async function getTopInfluencerOfMyFans(fid: number): Promise<TopInfluencer> {
-  console.log('Processing fid, time: ', new Date());
-
   const data = await Lum0x.farcasterCast.getCastsByFid({
     fid: fid,
     limit: 1,
   });
-
-  console.log('Got Casts, time: ', new Date() );
 
   const { casts } = data.result
 
@@ -110,17 +106,12 @@ export async function getTopInfluencerOfMyFans(fid: number): Promise<TopInfluenc
     const filteredFids = uniqueFids.filter(fid => !fanFids.includes(fid));
     fanFids.push(...filteredFids);
   }
-  console.log('Got fanFids, time: ', new Date() );
-  console.log('length of fanFids: ', fanFids.length);
 
   for (const fanFid of fanFids) {
     await processCastsByFid(fanFid);
   }
 
-  console.log('Processed all fanFids, time: ', new Date() );
-
   const sortedScoreBoard = Object.entries(scoreBoard).sort((a, b) => b[1].totalScore - a[1].totalScore);
-  console.log('Sorting Done, time: ', new Date() );
   const topInfluencerFid = parseInt(sortedScoreBoard[0][0]);
   const topInfluencer = await getUsersFromFids([topInfluencerFid]);
   return {

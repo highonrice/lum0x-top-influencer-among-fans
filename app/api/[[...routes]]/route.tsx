@@ -2,7 +2,7 @@
 
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
-// import { neynar } from 'frog/hubs'
+import { neynar } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
 import { getTopInfluencerOfMyFans, TopInfluencer, getUsersFromFids } from '../utils/lum0x-helpers'
@@ -27,7 +27,7 @@ const app = new Frog({
   basePath: '/api',
   title: 'Top Influencer among Fans',
   // Supply a Hub to enable frame verification.
-  // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
+  hub: neynar({ apiKey: process.env.NEYNAR_API_KEY ?? '' }),
   imageAspectRatio: '1:1',
   imageOptions: {
     height: 1000,
@@ -72,12 +72,14 @@ app.frame('/find', async (c) => {
     return c.error({message: 'No fid provided'});
   }
 
-  // TODO: change this to the real fid
   const user = await getUsersFromFids([fid]);
   const displayName = user[0].display_name;
-  // TODO: change this to the real fid
-  const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(217355);
-  console.log(topInfluncer);
+  const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(fid);
+
+  const frameUrl = `${process.env.BASE_URL}/share/${fid}`
+  const message = `@${topInfluncer.username} is the top influencer among my fans!`
+  const urlMessage = message.replace(/ /g, '%20')
+  const shareUrl = `https://warpcast.com/~/compose?text=${urlMessage}&embeds[]=${frameUrl}`
 
   return c.res({
     image: (
@@ -85,7 +87,7 @@ app.frame('/find', async (c) => {
     ),
     intents: [
       <Button action="/find">Check Me</Button>,
-      <Button.Link href={`/share/${fid}`}>Share</Button.Link>,
+      <Button.Link href={shareUrl}>Share</Button.Link>,
     ],
   })
 })
@@ -110,7 +112,6 @@ app.frame('/share/:fid', async (c) => {
   const user = await getUsersFromFids([Number(fid)]);
   const displayName = user[0].display_name;
   const topInfluncer: TopInfluencer = await getTopInfluencerOfMyFans(Number(fid));
-  console.log(topInfluncer);
 
   return c.res({
     image: (
